@@ -36,7 +36,7 @@ export default defineComponent({
     const router = useRouter()
 
     const register = async () => {
-      await apiClient.post('/api/register', { username: username.value, email: email.value, password: password.value })
+      await apiClient.post('/api/auth/register', { username: username.value, email: email.value, password: password.value })
       router.push('/login')
     }
 
