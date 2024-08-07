@@ -1,7 +1,10 @@
 <template>
   <div class="container mx-auto px-4">
-    <div class="flex justify-between items-center py-4">
-      <h2 class="text-2xl font-bold">Product List</h2>
+    <!-- Header -->
+    <div class="flex justify-center items-center py-4">
+      <h2 class="text-3xl font-bold">Products</h2>
+    </div>
+    <div class="flex justify-end items-center py-4">
       <div>
         <router-link to="/add-product" class="text-blue-500 hover:underline mr-4" v-if="isAuthenticated">Add Product</router-link>
         <router-link to="/login" class="text-blue-500 hover:underline mr-4" v-if="!isAuthenticated">Login</router-link>
@@ -19,15 +22,22 @@
     </div>
 
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <div v-for="product in filteredProducts" :key="product.id" class="border rounded-lg overflow-hidden shadow-lg bg-white">
+      <div
+        v-for="product in filteredProducts"
+        :key="product.id"
+        class="border rounded-lg overflow-hidden shadow-lg bg-white hover:shadow-xl transition-shadow duration-300"
+      >
         <img :src="product.imageURL" alt="Product Image" class="w-full h-48 object-cover" />
         <div class="p-4">
           <h3 class="text-xl font-bold mb-2">{{ product.name }}</h3>
           <p class="text-gray-700 mb-2">{{ product.description }}</p>
           <p class="text-lg font-semibold mb-4">${{ product.price.toFixed(2) }}</p>
-          <div v-if="isAuthenticated" class="flex justify-between">
-            <button @click="showEditModal(product)" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Edit</button>
-            <button @click="deleteProduct(product.id)" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Delete</button>
+          <div class="flex justify-between">
+            <button v-if="!isAuthenticated" @click="buyProduct(product)" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Buy</button>
+            <div v-if="isAuthenticated" class="flex space-x-2">
+              <button @click="showEditModal(product)" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2">Edit</button>
+              <button @click="deleteProduct(product.id)" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2">Delete</button>
+            </div>
           </div>
         </div>
       </div>
@@ -61,9 +71,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import apiClient from '../utils/apiClient'
+import { defineComponent, ref, onMounted, computed } from 'vue';
+import { useRouter } from 'vue-router';
+import apiClient from '../utils/apiClient';
 
 interface Product {
   id: string;
@@ -76,66 +86,71 @@ interface Product {
 export default defineComponent({
   name: 'ProductList',
   setup() {
-    const products = ref<Product[]>([])
-    const searchQuery = ref('')
-    const showModal = ref(false)
+    const products = ref<Product[]>([]);
+    const searchQuery = ref('');
+    const showModal = ref(false);
     const editProductData = ref<Product>({
       id: '',
       name: '',
       description: '',
       price: 0,
       imageURL: ''
-    })
-    const router = useRouter()
+    });
+    const router = useRouter();
 
-    const isAuthenticated = !!localStorage.getItem('token')
+    const isAuthenticated = !!localStorage.getItem('token');
 
     const fetchProducts = async () => {
-      const response = await apiClient.get('/api/products')
-      products.value = response.data
-    }
+      const response = await apiClient.get('/api/products');
+      products.value = response.data;
+    };
 
     const showEditModal = (product: Product) => {
-      editProductData.value = { ...product }
-      showModal.value = true
-    }
+      editProductData.value = { ...product };
+      showModal.value = true;
+    };
 
     const closeEditModal = () => {
-      showModal.value = false
-    }
+      showModal.value = false;
+    };
 
     const updateProduct = async () => {
       await apiClient.put(`/api/products/${editProductData.value.id}`, editProductData.value, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-      })
-      fetchProducts()
-      closeEditModal()
-    }
+      });
+      fetchProducts();
+      closeEditModal();
+    };
 
     const deleteProduct = async (id: string) => {
       await apiClient.delete(`/api/products/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`
         }
-      })
-      fetchProducts()
-    }
+      });
+      fetchProducts();
+    };
 
     const logout = () => {
-      localStorage.removeItem('token')
-      router.push('/login')
-    }
+      localStorage.removeItem('token');
+      router.push('/login');
+    };
+
+    const buyProduct = (product: Product) => {
+      // Implement buy functionality here
+      alert(`Bought product: ${product.name}`);
+    };
 
     const filteredProducts = computed(() => {
-      const query = searchQuery.value.toLowerCase()
-      return products.value.filter(product => product.name.toLowerCase().includes(query))
-    })
+      const query = searchQuery.value.toLowerCase();
+      return products.value.filter(product => product.name.toLowerCase().includes(query));
+    });
 
     onMounted(() => {
-      fetchProducts()
-    })
+      fetchProducts();
+    });
 
     return {
       products,
@@ -148,8 +163,9 @@ export default defineComponent({
       closeEditModal,
       updateProduct,
       deleteProduct,
-      logout
-    }
+      logout,
+      buyProduct
+    };
   }
-})
+});
 </script>
